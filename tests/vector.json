@@ -1,0 +1,24 @@
+{
+  "anagram": "dyt8zbevq6ragmspk7uwj4h32fnxc5",
+  "author": "Joaquim Pedro de Morais Filho <j360074@hotmail.com>",
+  "cipher": {
+    "ciphertext": "fea28379ec8e5aa11fbc98213678a0d53ac767978a316af8487bbf561fe0ede004e18341f5800589d2051ad0cc3b68d67412a3ebf22bde6965e94faf407edd09",
+    "name": "XOR-SHA256-CTR"
+  },
+  "created": "2026-09-24",
+  "format": "lottery-yourtoken/1",
+  "kdf": {
+    "iterations": 1000,
+    "name": "PBKDF2-HMAC-SHA256",
+    "salt": "000102030405060708090a0b0c0d0e0f"
+  },
+  "mac": {
+    "name": "HMAC-SHA256",
+    "tag": "d6b02c09476aa85b07a9c632fd163235885cdf30e2b84921a8a587e640f412f1"
+  },
+  "prize": {
+    "address": null,
+    "chain": "ethereum",
+    "note": "deposit ERC-20 tokens to grow the prize"
+  }
+}

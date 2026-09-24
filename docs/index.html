@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lottery yourToken — the prize that grows until someone reorders 30 characters</title>
+<meta name="description" content="Lottery yourToken: carteira-prêmio pública, chave encriptada, 30 caracteres embaralhados. Aplicação nº 2 do sistema Blockz10, por Joaquim Pedro de Morais Filho.">
+<meta name="author" content="Joaquim Pedro de Morais Filho">
+<meta property="og:title" content="Lottery yourToken">
+<meta property="og:description" content="A cryptographic treasure hunt: reorder 30 shuffled characters, decrypt the key, take the prize. A Blockz10 application.">
+<meta property="og:image" content="assets/poster.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' fill='none' stroke='%23ffd54f' stroke-width='12'/><text x='50' y='68' font-size='46' text-anchor='middle' fill='%23ffd54f' font-family='monospace'>L</text></svg>">
+<style>
+:root{
+  --bg:#060806; --panel:#0c110d; --line:#1c2b20;
+  --green:#00e676; --green-dim:#6ec896; --txt:#ebebeb; --grey:#9aa79e;
+  --gold:#ffd54f; --gold-dim:#c8b06e; --blue:#81d4fa; --red:#f44336;
+  --mono:'Consolas','Courier New',monospace;
+  --sans:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.65}
+a{color:var(--green);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+header{position:sticky;top:0;z-index:9;background:rgba(6,8,6,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav{display:flex;align-items:center;gap:16px;height:60px;flex-wrap:wrap}
+.logo{font-family:var(--mono);font-weight:700;font-size:1.1rem;color:var(--gold)}
+nav a.item{color:var(--grey);font-size:.92rem}
+nav a.item:hover{color:var(--gold);text-decoration:none}
+.spacer{flex:1}
+.lang button{background:none;border:1px solid var(--line);color:var(--grey);padding:4px 12px;cursor:pointer;font-family:var(--mono);border-radius:4px 0 0 4px}
+.lang button+button{border-radius:0 4px 4px 0;border-left:none}
+.lang button.on{color:#141002;background:var(--gold);border-color:var(--gold);font-weight:700}
+.hero{padding:84px 0 60px;text-align:center}
+.hero h1{font-family:var(--mono);font-size:clamp(2rem,5.5vw,3.6rem);color:var(--gold);letter-spacing:.02em}
+.hero .tag{font-size:clamp(1.05rem,2.6vw,1.4rem);margin-top:14px}
+.hero .sub{color:var(--grey);margin-top:8px;max-width:780px;margin-left:auto;margin-right:auto}
+.hero .author{margin-top:30px;color:var(--green-dim);font-family:var(--mono);font-size:.95rem}
+.badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.badge{border:1px solid var(--line);background:var(--panel);padding:6px 14px;border-radius:20px;font-size:.82rem;color:var(--grey);font-family:var(--mono)}
+.cta{display:inline-block;margin-top:34px;background:var(--gold);color:#141002;font-weight:700;padding:13px 30px;border-radius:6px;font-size:1.02rem}
+.cta:hover{filter:brightness(1.12);text-decoration:none}
+.cta.ghost{background:none;border:1px solid var(--gold);color:var(--gold);margin-left:10px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+h2{font-family:var(--mono);color:var(--gold);font-size:1.7rem;margin-bottom:8px}
+.lead{color:var(--grey);margin-bottom:30px;max-width:780px}
+.lead b,.lead code{color:var(--txt)}
+code.k{font-family:var(--mono);color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px}
+.card h3{font-size:1.02rem;color:var(--txt);margin-bottom:8px}
+.card .k{font-family:var(--mono);color:var(--gold);font-size:.8rem;letter-spacing:.08em}
+.card p{color:var(--grey);font-size:.92rem}
+.steps{counter-reset:st;display:flex;flex-direction:column;gap:0;margin-top:10px}
+.step{display:flex;gap:22px;padding:20px 0;border-bottom:1px dashed var(--line)}
+.step:last-child{border-bottom:none}
+.step .n{counter-increment:st;flex-shrink:0;width:52px;height:52px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:1.25rem;color:var(--gold)}
+.step .n::before{content:counter(st)}
+.step h3{font-size:1.05rem;margin-bottom:4px}
+.step p{color:var(--grey);font-size:.93rem;max-width:760px}
+.step code{font-family:var(--mono);color:var(--green);font-size:.9em}
+.demo{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:28px;margin-top:26px}
+.demo label{display:block;font-family:var(--mono);font-size:.85rem;color:var(--green-dim);margin-bottom:8px;margin-top:18px}
+.demo label:first-child{margin-top:0}
+.demo input[type=text],.demo textarea{width:100%;background:#04120a;border:1px solid var(--line);color:var(--txt);font-family:var(--mono);font-size:1rem;padding:12px;border-radius:6px}
+.demo input:focus,.demo textarea:focus{outline:1px solid var(--gold)}
+.row{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;align-items:center}
+button.act{background:var(--gold);color:#141002;border:none;font-weight:700;padding:10px 22px;border-radius:6px;cursor:pointer;font-size:.95rem}
+button.act.sec{background:none;border:1px solid var(--gold);color:var(--gold)}
+button.act.grn{background:var(--green);color:#04140a}
+button.act:hover{filter:brightness(1.1)}
+button.act:disabled{opacity:.4;cursor:not-allowed}
+.out{margin-top:16px;background:#04120a;border:1px solid var(--line);border-radius:6px;padding:14px;font-family:var(--mono);word-break:break-all;min-height:52px;color:var(--green);font-size:.92rem}
+.stat{font-family:var(--mono);color:var(--grey);font-size:.85rem;margin-top:10px}
+.warn{margin-top:18px;border-left:3px solid var(--gold);background:#141204;padding:12px 16px;font-size:.88rem;color:#e8dfa0;border-radius:0 6px 6px 0}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;min-height:46px}
+.tile{width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:1.05rem;background:#04120a;border:2px solid var(--gold);color:var(--gold);border-radius:6px;cursor:pointer;user-select:none;transition:transform .1s}
+.tile:hover{transform:translateY(-3px)}
+.tile.used{opacity:.18;pointer-events:none}
+.tile.guess{border-color:var(--green);color:var(--green);cursor:pointer}
+.result-win{color:var(--gold);font-family:var(--mono);font-size:1.05rem;margin-top:14px}
+.result-lose{color:var(--red);font-family:var(--mono);font-size:1.05rem;margin-top:14px}
+.prize-box{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.prize-amt{font-family:var(--mono);font-size:2rem;color:var(--gold);font-weight:700}
+table.dif{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.9rem;margin-top:16px}
+table.dif th,table.dif td{border:1px solid var(--line);padding:9px 12px;text-align:left}
+table.dif th{color:var(--green-dim);background:#0a140e}
+table.dif td.g{color:var(--gold)}
+pre.code{background:#04120a;border:1px solid var(--line);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:.88rem;color:var(--txt);margin-top:16px}
+pre.code .c{color:#5a7a66}.code .g{color:var(--green)}
+video{width:100%;border-radius:12px;border:1px solid var(--line);background:#000;display:block}
+.author-card{display:flex;gap:26px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:30px;flex-wrap:wrap}
+.avatar{width:92px;height:92px;border-radius:50%;background:#141002;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:2.2rem;color:var(--gold);font-weight:700;flex-shrink:0}
+.author-card h3{font-size:1.3rem}
+.author-card .contact{font-family:var(--mono);color:var(--gold);margin-top:6px}
+.author-card p{color:var(--grey);margin-top:10px;font-size:.95rem;max-width:640px}
+footer{border-top:1px solid var(--line);padding:36px 0;text-align:center;color:var(--grey);font-size:.85rem}
+footer .sig{font-family:var(--mono);color:var(--gold-dim);margin-top:6px}
+[data-en]{display:none}
+html.en [data-pt]{display:none}
+html.en [data-en]{display:revert}
+@media(max-width:640px){.hero{padding:56px 0 40px}.tile{width:32px;height:32px;font-size:.9rem}}
+</style>
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <span class="logo">«Lottery yourToken»</span>
+  <a class="item" href="#conceito" data-pt>Conceito</a><a class="item" href="#conceito" data-en>Concept</a>
+  <a class="item" href="#protocolo" data-pt>Protocolo</a><a class="item" href="#protocolo" data-en>Protocol</a>
+  <a class="item" href="#demo">Demo</a>
+  <a class="item" href="#dificuldade" data-pt>Dificuldade</a><a class="item" href="#dificuldade" data-en>Difficulty</a>
+  <a class="item" href="#video" data-pt>Vídeo</a><a class="item" href="#video" data-en>Video</a>
+  <a class="item" href="#autor" data-pt>Autor</a><a class="item" href="#autor" data-en>Author</a>
+  <span class="spacer"></span>
+  <span class="lang"><button id="btn-pt" class="on" onclick="setLang('pt')">PT</button><button id="btn-en" onclick="setLang('en')">EN</button></span>
+  <a class="item" href="https://github.com/elevbit-ai/lottery-yourtoken">GitHub ↗</a>
+</nav></div></header>
+
+<div class="hero wrap">
+  <h1>«Lottery yourToken»</h1>
+  <p class="tag" data-pt>O prêmio que cresce até alguém reordenar 30 caracteres</p>
+  <p class="tag" data-en>The prize that grows until someone reorders 30 characters</p>
+  <p class="sub" data-pt>Carteira-prêmio pública · chave privada encriptada · senha publicada embaralhada. Quem encontra a ordem correta decripta a chave e leva tudo. Aplicação nº 2 do sistema <a href="https://github.com/elevbit-ai/blockz10">Blockz10</a>.</p>
+  <p class="sub" data-en>Public prize wallet · encrypted private key · password published shuffled. Whoever finds the correct ordering decrypts the key and takes everything. Application #2 of the <a href="https://github.com/elevbit-ai/blockz10">Blockz10</a> system.</p>
+  <p class="author">Joaquim Pedro de Morais Filho · j360074@hotmail.com · 2021–2026</p>
+  <div class="badges">
+    <span class="badge">PBKDF2 · HMAC-SHA256</span><span class="badge">Python + JavaScript</span>
+    <span class="badge">32/32 tests ✓</span><span class="badge">MIT License</span>
+    <span class="badge" data-pt>sistema Blockz10 · NFT on-chain</span><span class="badge" data-en>Blockz10 system · on-chain NFT</span>
+  </div>
+  <div>
+    <a class="cta" href="#video" data-pt>▶ Assistir ao vídeo</a>
+    <a class="cta" href="#video" data-en>▶ Watch the video</a>
+    <a class="cta ghost" href="#demo" data-pt>Jogar a demo</a>
+    <a class="cta ghost" href="#demo" data-en>Play the demo</a>
+  </div>
+</div>
+
+<section id="conceito"><div class="wrap">
+  <h2 data-pt># O conceito</h2><h2 data-en># The concept</h2>
+  <p class="lead" data-pt>Quatro peças públicas, um único segredo: a <b>ordem</b>. Depois de publicado, o jogo não depende mais do organizador — verificar um palpite é uma conta local que qualquer computador faz.</p>
+  <p class="lead" data-en>Four public pieces, a single secret: the <b>ordering</b>. Once published, the game no longer depends on the organizer — checking a guess is a local computation any computer can do.</p>
+  <div class="grid">
+    <div class="card"><div class="k">01 · CARTEIRA / WALLET</div>
+      <h3 data-pt>O cofre público</h3><h3 data-en>The public vault</h3>
+      <p data-pt>Um endereço Ethereum comum. O saldo é visível on-chain e <b>qualquer pessoa</b> pode aumentá-lo depositando tokens ERC-20 — o prêmio é colaborativamente inflável.</p>
+      <p data-en>An ordinary Ethereum address. The balance is visible on-chain and <b>anyone</b> can grow it by depositing ERC-20 tokens — the prize is collaboratively inflatable.</p></div>
+    <div class="card"><div class="k">02 · CHAVE / KEY</div>
+      <h3 data-pt>O tesouro encriptado</h3><h3 data-en>The encrypted treasure</h3>
+      <p data-pt>A chave privada da carteira — na tradição Blockz10, uma string {e,1} de 64 caracteres — encriptada e publicada com autenticação HMAC.</p>
+      <p data-en>The wallet's private key — in the Blockz10 tradition, a 64-char {e,1} string — encrypted and published with HMAC authentication.</p></div>
+    <div class="card"><div class="k">03 · ANAGRAMA / ANAGRAM</div>
+      <h3 data-pt>A senha embaralhada</h3><h3 data-en>The shuffled password</h3>
+      <p data-pt>Os 30 caracteres da senha são públicos — mas em ordem embaralhada. Todo o segredo do jogo está na permutação correta.</p>
+      <p data-en>All 30 password characters are public — but in shuffled order. The game's entire secret lives in the correct permutation.</p></div>
+    <div class="card"><div class="k">04 · VITÓRIA / WINNING</div>
+      <h3 data-pt>Verificável offline</h3><h3 data-en>Verifiable offline</h3>
+      <p data-pt>A ordem certa passa no MAC, decripta a chave e assina a transação que transfere o prêmio. Ninguém sabe que você venceu até a transação aparecer.</p>
+      <p data-en>The right ordering passes the MAC, decrypts the key and signs the sweep transaction. Nobody knows you won until it lands.</p></div>
+  </div>
+</div></section>
+
+<section id="protocolo"><div class="wrap">
+  <h2 data-pt># O protocolo em 6 passos</h2><h2 data-en># The protocol in 6 steps</h2>
+  <p class="lead" data-pt>Somente primitivos padrão — <code class="k">PBKDF2-HMAC-SHA256</code>, keystream <code class="k">SHA-256</code> em modo contador, <code class="k">HMAC-SHA256</code> — nativos na stdlib do Python e no WebCrypto do navegador. Especificação formal completa em <a href="https://github.com/elevbit-ai/lottery-yourtoken/blob/main/SPECIFICATION.md">SPECIFICATION.md</a>.</p>
+  <p class="lead" data-en>Standard primitives only — <code class="k">PBKDF2-HMAC-SHA256</code>, counter-mode <code class="k">SHA-256</code> keystream, <code class="k">HMAC-SHA256</code> — native to Python's stdlib and the browser's WebCrypto. Full formal spec in <a href="https://github.com/elevbit-ai/lottery-yourtoken/blob/main/SPECIFICATION.md">SPECIFICATION.md</a>.</p>
+  <div class="steps">
+    <div class="step"><span class="n"></span><div>
+      <h3 data-pt>Gerar a carteira-prêmio</h3><h3 data-en>Generate the prize wallet</h3>
+      <p data-pt>O organizador cria a chave privada <code>K</code> — uma string {e,1} de 64 caracteres, chave Ethereum sintaticamente válida e comprimível pela codificação Blockz10 (<code>eee11 → 311</code>).</p>
+      <p data-en>The organizer creates private key <code>K</code> — a 64-char {e,1} string, a syntactically valid Ethereum key that also compresses under the Blockz10 encoding (<code>eee11 → 311</code>).</p></div></div>
+    <div class="step"><span class="n"></span><div>
+      <h3 data-pt>Gerar a senha de 30 caracteres</h3><h3 data-en>Generate the 30-character password</h3>
+      <p data-pt>Senha <code>P</code> aleatória de charset sem símbolos ambíguos. A composição (quantos caracteres repetidos) é o <b>dial de dificuldade</b>.</p>
+      <p data-en>Random password <code>P</code> from an unambiguous charset. Its composition (how many repeated characters) is the <b>difficulty dial</b>.</p></div></div>
+    <div class="step"><span class="n"></span><div>
+      <h3 data-pt>Encriptar e autenticar</h3><h3 data-en>Encrypt and authenticate</h3>
+      <p data-pt><code>PBKDF2(P, salt, 200 000) → enc_key ‖ mac_key</code>; a chave é XOR-ada com keystream SHA-256 e o pacote ganha uma tag <code>HMAC-SHA256(salt ‖ ciphertext)</code>. Cada palpite custa as 200 000 iterações — busca exaustiva é cara por construção.</p>
+      <p data-en><code>PBKDF2(P, salt, 200 000) → enc_key ‖ mac_key</code>; the key is XORed against a SHA-256 keystream and the bundle carries an <code>HMAC-SHA256(salt ‖ ciphertext)</code> tag. Every guess costs the 200 000 iterations — exhaustive search is expensive by construction.</p></div></div>
+    <div class="step"><span class="n"></span><div>
+      <h3 data-pt>Embaralhar a senha</h3><h3 data-en>Shuffle the password</h3>
+      <p data-pt>Fisher–Yates com aleatoriedade criptográfica produz o anagrama público <code>A</code> — garantidamente diferente da resposta.</p>
+      <p data-en>Cryptographic Fisher–Yates yields the public anagram <code>A</code> — guaranteed different from the answer.</p></div></div>
+    <div class="step"><span class="n"></span><div>
+      <h3 data-pt>Publicar e descartar</h3><h3 data-en>Publish and discard</h3>
+      <p data-pt>O pacote JSON (anagrama, salt, ciphertext, tag, endereço) vai a público; a senha original é descartada. A partir daqui o organizador é dispensável. Patrocinadores depositam tokens e o prêmio cresce à vista de todos.</p>
+      <p data-en>The JSON bundle (anagram, salt, ciphertext, tag, address) goes public; the original password is discarded. From here on the organizer is dispensable. Sponsors deposit tokens and the prize grows in plain sight.</p></div></div>
+    <div class="step"><span class="n"></span><div>
+      <h3 data-pt>Vencer</h3><h3 data-en>Win</h3>
+      <p data-pt>A ordem correta passa no MAC → decripta <code>K</code> → o vencedor importa a chave e transfere <b>tudo em uma única transação</b> (com relay privado contra front-running, se prudente).</p>
+      <p data-en>The correct ordering passes the MAC → decrypts <code>K</code> → the winner imports the key and sweeps <b>everything in a single transaction</b> (via a private relay against front-running, if prudent).</p></div></div>
+  </div>
+</div></section>
+
+<section id="demo"><div class="wrap">
+  <h2 data-pt># Demo jogável — loteria real no seu navegador</h2><h2 data-en># Playable demo — a real lottery in your browser</h2>
+  <p class="lead" data-pt>Isto não é uma simulação: é a implementação de referência rodando no WebCrypto do seu navegador. Uma loteria de demonstração (anagrama curto, para ser vencível à mão) é criada localmente — nada sai da sua máquina. Clique nos caracteres dourados para montar seu palpite.</p>
+  <p class="lead" data-en>This is not a mock: it is the reference implementation running on your browser's WebCrypto. A demo lottery (short anagram, so it is winnable by hand) is created locally — nothing leaves your machine. Click the golden characters to build your guess.</p>
+  <div class="demo">
+    <div class="row" style="margin-top:0">
+      <button class="act" onclick="newLottery(6)" data-pt>◈ Nova loteria fácil (6 caracteres)</button>
+      <button class="act" onclick="newLottery(6)" data-en>◈ New easy lottery (6 characters)</button>
+      <button class="act sec" onclick="newLottery(30)" data-pt>◈ Loteria real (30 caracteres)</button>
+      <button class="act sec" onclick="newLottery(30)" data-en>◈ Real lottery (30 characters)</button>
+    </div>
+    <label data-pt>PRÊMIO ACUMULADO (demonstração) — cresce a cada depósito</label>
+    <label data-en>ACCUMULATED PRIZE (demo) — grows with each deposit</label>
+    <div class="prize-box">
+      <span class="prize-amt" id="prize">1 000 yTKN</span>
+      <button class="act grn" onclick="deposit()" data-pt>+ Depositar 500 yTKN</button>
+      <button class="act grn" onclick="deposit()" data-en>+ Deposit 500 yTKN</button>
+    </div>
+    <label data-pt>ANAGRAMA PÚBLICO — clique para montar o palpite</label>
+    <label data-en>PUBLIC ANAGRAM — click to build your guess</label>
+    <div class="tiles" id="pool"></div>
+    <label data-pt>SEU PALPITE — clique num caractere para removê-lo</label>
+    <label data-en>YOUR GUESS — click a character to remove it</label>
+    <div class="tiles" id="guess"></div>
+    <div class="row">
+      <button class="act" id="btn-verify" onclick="tryGuess()" disabled data-pt>Verificar palpite (PBKDF2 200k)</button>
+      <button class="act" id="btn-verify-en" onclick="tryGuess()" disabled data-en>Verify guess (PBKDF2 200k)</button>
+      <button class="act sec" onclick="clearGuess()" data-pt>↺ Limpar</button>
+      <button class="act sec" onclick="clearGuess()" data-en>↺ Clear</button>
+      <button class="act sec" onclick="spoiler()" data-pt>👁 Modo espião (revela a solução)</button>
+      <button class="act sec" onclick="spoiler()" data-en>👁 Spy mode (reveal the solution)</button>
+    </div>
+    <div id="verdict"></div>
+    <label data-pt>PACOTE PUBLICADO (o que o mundo vê)</label>
+    <label data-en>PUBLISHED BUNDLE (what the world sees)</label>
+    <div class="out" id="bundle">—</div>
+    <div class="warn" data-pt><b>Nota:</b> nesta demo a chave-prêmio é uma string {e,1} gerada localmente e o token é fictício. Numa instância real, o endereço da carteira acompanha o pacote e o prêmio são tokens ERC-20 de verdade. Especificação técnica para fins educacionais.</div>
+    <div class="warn" data-en><b>Note:</b> in this demo the prize key is a locally generated {e,1} string and the token is fictional. In a live instance, the wallet address ships with the bundle and the prize is real ERC-20 tokens. Technical specification for educational purposes.</div>
+  </div>
+</div></section>
+
+<section id="dificuldade"><div class="wrap">
+  <h2 data-pt># A matemática da dificuldade</h2><h2 data-en># The mathematics of difficulty</h2>
+  <p class="lead" data-pt>O espaço de busca é o número de permutações distintas do anagrama: <code class="k">n! / ∏ (repetições!)</code>. Com 30 caracteres únicos são <b>30! ≈ 2,65 × 10³²</b> ordens — mais que estrelas no universo observável. Repetições encolhem o espaço de forma controlada: o organizador escolhe entre uma loteria de décadas e um puzzle de fim de semana.</p>
+  <p class="lead" data-en>The search space is the anagram's number of distinct permutations: <code class="k">n! / ∏ (repeats!)</code>. With 30 unique characters that is <b>30! ≈ 2.65 × 10³²</b> orderings — more than stars in the observable universe. Repetitions shrink the space in a controlled way: the organizer chooses between a decades-long lottery and a weekend puzzle.</p>
+  <table class="dif">
+    <tr><th data-pt>composição (30 caracteres)</th><th data-en>composition (30 characters)</th><th data-pt>ordens distintas</th><th data-en>distinct orderings</th><th>bits</th></tr>
+    <tr><td data-pt>30 únicos</td><td data-en>30 unique</td><td class="g">30! ≈ 2,65 × 10³²</td><td>107,7</td></tr>
+    <tr><td data-pt>15 símbolos × 2</td><td data-en>15 symbols × 2</td><td class="g">≈ 8,1 × 10²⁷</td><td>92,7</td></tr>
+    <tr><td data-pt>6 símbolos × 5</td><td data-en>6 symbols × 5</td><td class="g">≈ 8,9 × 10¹⁹</td><td>66,3</td></tr>
+    <tr><td data-pt>2 símbolos × 15</td><td data-en>2 symbols × 15</td><td class="g">≈ 1,55 × 10⁸</td><td>27,2</td></tr>
+  </table>
+  <div class="demo">
+    <label data-pt>CALCULADORA — digite um anagrama qualquer</label>
+    <label data-en>CALCULATOR — type any anagram</label>
+    <input type="text" id="dif-in" spellcheck="false" value="k7mwp2qr9tvx3jn8hsau5ybcedg64f">
+    <div class="row">
+      <button class="act" onclick="calcDif()" data-pt>Calcular espaço de busca</button>
+      <button class="act" onclick="calcDif()" data-en>Compute search space</button>
+      <span class="stat" data-pt>dicas reveladas: <input type="number" id="dif-hints" value="0" min="0" style="width:64px;background:#04120a;border:1px solid var(--line);color:var(--txt);font-family:var(--mono);padding:4px 8px;border-radius:4px"></span>
+      <span class="stat" data-en>hints revealed: <input type="number" id="dif-hints-en" value="0" min="0" style="width:64px;background:#04120a;border:1px solid var(--line);color:var(--txt);font-family:var(--mono);padding:4px 8px;border-radius:4px"></span>
+    </div>
+    <div class="out" id="dif-out">—</div>
+    <div class="stat" data-pt>O cronograma de dicas (revelar uma posição por período) garante que a loteria termina — §7 da especificação.</div>
+    <div class="stat" data-en>The hint schedule (reveal one position per period) guarantees the lottery ends — spec §7.</div>
+  </div>
+</div></section>
+
+<section id="video"><div class="wrap">
+  <h2 data-pt># Vídeo explicativo</h2><h2 data-en># Explainer video</h2>
+  <p class="lead" data-pt>O conceito completo em 100 segundos: a carteira, a senha, o embaralhamento, a criptografia, a matemática do espaço de busca e o momento da vitória.</p>
+  <p class="lead" data-en>The full concept in 100 seconds: the wallet, the password, the shuffle, the cryptography, the search-space math and the winning moment.</p>
+  <video controls preload="metadata" poster="assets/poster.png">
+    <source src="assets/lottery-explainer.mp4" type="video/mp4">
+  </video>
+</div></section>
+
+<section id="uso"><div class="wrap">
+  <h2 data-pt># Uso rápido</h2><h2 data-en># Quick start</h2>
+  <pre class="code"><span class="c"># Python — organizador / organizer</span>
+<span class="g">&gt;&gt;&gt;</span> from lottery_yourtoken import create_lottery, generate_key
+<span class="g">&gt;&gt;&gt;</span> bundle, password = create_lottery(generate_key(64))
+<span class="g">&gt;&gt;&gt;</span> bundle["anagram"]          <span class="c"># público / public</span>
+'k7mwp2qr9tvx3jn8hsau5ybcedg64f'
+
+<span class="c"># Python — jogador / player</span>
+<span class="g">&gt;&gt;&gt;</span> from lottery_yourtoken import verify_guess, reveal_key
+<span class="g">&gt;&gt;&gt;</span> verify_guess(bundle, minha_ordem)
+True
+<span class="g">&gt;&gt;&gt;</span> reveal_key(bundle, minha_ordem)   <span class="c"># a chave do prêmio / the prize key</span>
+'e11eee1e1eee11e1...'</pre>
+  <p class="lead" style="margin-top:22px" data-pt>Implementações espelhadas em Python (stdlib pura) e JavaScript (WebCrypto), 32 testes — incluindo um vetor gerado pelo Python e decriptado pelo JavaScript, provando compatibilidade byte a byte. Código em <a href="https://github.com/elevbit-ai/lottery-yourtoken">github.com/elevbit-ai/lottery-yourtoken</a>.</p>
+  <p class="lead" style="margin-top:22px" data-en>Mirrored implementations in Python (pure stdlib) and JavaScript (WebCrypto), 32 tests — including a vector produced by Python and decrypted by JavaScript, proving byte-for-byte compatibility. Code at <a href="https://github.com/elevbit-ai/lottery-yourtoken">github.com/elevbit-ai/lottery-yourtoken</a>.</p>
+</div></section>
+
+<section id="autor"><div class="wrap">
+  <h2 data-pt># Autor</h2><h2 data-en># Author</h2>
+  <div class="author-card">
+    <div class="avatar">JP</div>
+    <div>
+      <h3>Joaquim Pedro de Morais Filho</h3>
+      <div class="contact">j360074@hotmail.com</div>
+      <p data-pt>Criador do sistema Blockz10 (2020) e da Lottery yourToken (2021). O conceito foi documentado publicamente desde a origem em <a href="https://blockz10.blogspot.com">blockz10.blogspot.com</a> e registrado on-chain como NFT na rede Ethereum (coleção Blockz10 · OpenSea).</p>
+      <p data-en>Creator of the Blockz10 system (2020) and of Lottery yourToken (2021). The concept has been publicly documented since its origin at <a href="https://blockz10.blogspot.com">blockz10.blogspot.com</a> and registered on-chain as an NFT on Ethereum (Blockz10 collection · OpenSea).</p>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div data-pt>© 2020–2026 Joaquim Pedro de Morais Filho · Licença MIT · conceito registrado on-chain</div>
+  <div data-en>© 2020–2026 Joaquim Pedro de Morais Filho · MIT License · concept registered on-chain</div>
+  <div class="sig">«Lottery yourToken» — a Blockz10 application</div>
+</div></footer>
+
+<script type="module">
+import { createLottery, verifyGuess, revealKey, difficulty, bzEncode, generateEthPuzzleKey }
+  from "./assets/lottery.js";
+
+/* ---------- language ---------- */
+window.setLang = function(l){
+  document.documentElement.classList.toggle('en', l==='en');
+  document.getElementById('btn-pt').classList.toggle('on', l==='pt');
+  document.getElementById('btn-en').classList.toggle('on', l==='en');
+  try{localStorage.setItem('lyt-lang', l);}catch(e){}
+};
+try{
+  const saved = localStorage.getItem('lyt-lang');
+  if(saved) setLang(saved);
+  else if((navigator.language||'').toLowerCase().indexOf('pt')!==0) setLang('en');
+}catch(e){}
+
+const $ = id => document.getElementById(id);
+const EN = () => document.documentElement.classList.contains('en');
+
+/* ---------- playable demo ---------- */
+let state = null;   // { bundle, password, key, guess: [] , prize }
+
+async function makeLottery(n){
+  const key = generateEthPuzzleKey(64);
+  // demo passwords come from the same unambiguous charset, length n
+  const charset = "23456789abcdefghjkmnpqrstuvwxyz";
+  const a = new Uint8Array(n); crypto.getRandomValues(a);
+  const pwd = [...a].map(b => charset[b % charset.length]).join("");
+  const { bundle, password } = await createLottery(key, pwd);
+  return { bundle, password, key, guess: [], prize: 1000 };
+}
+
+function renderTiles(){
+  const pool = $('pool'), guess = $('guess');
+  pool.innerHTML = ''; guess.innerHTML = '';
+  const used = new Array(state.bundle.anagram.length).fill(false);
+  // mark used pool indices in order of guess picks
+  state.guess.forEach(gi => used[gi] = true);
+  [...state.bundle.anagram].forEach((ch, i) => {
+    const t = document.createElement('div');
+    t.className = 'tile' + (used[i] ? ' used' : '');
+    t.textContent = ch;
+    t.onclick = () => { state.guess.push(i); renderTiles(); };
+    pool.appendChild(t);
+  });
+  state.guess.forEach((gi, k) => {
+    const t = document.createElement('div');
+    t.className = 'tile guess';
+    t.textContent = state.bundle.anagram[gi];
+    t.onclick = () => { state.guess.splice(k, 1); renderTiles(); };
+    guess.appendChild(t);
+  });
+  const complete = state.guess.length === state.bundle.anagram.length;
+  $('btn-verify').disabled = !complete;
+  $('btn-verify-en').disabled = !complete;
+  $('verdict').innerHTML = '';
+}
+
+function renderBundle(){
+  const b = state.bundle;
+  $('bundle').textContent = JSON.stringify(b, null, 1)
+    .replace(/\n\s*/g, '\n ');
+}
+
+window.newLottery = async function(n){
+  state = await makeLottery(n);
+  $('prize').textContent = '1 000 yTKN';
+  renderTiles(); renderBundle();
+};
+
+const fmt = n => n.toLocaleString('en-US').replace(/,/g, ' ');
+
+window.deposit = function(){
+  if(!state) return;
+  state.prize += 500;
+  $('prize').textContent = fmt(state.prize) + ' yTKN';
+};
+
+window.clearGuess = function(){ state.guess = []; renderTiles(); };
+
+window.spoiler = function(){
+  if(!state) return;
+  const an = state.bundle.anagram, pw = state.password;
+  // rebuild guess indices matching the password using pool characters
+  const avail = [...an].map((c, i) => [c, i]);
+  state.guess = [...pw].map(ch => {
+    const k = avail.findIndex(([c]) => c === ch);
+    const [, idx] = avail[k]; avail.splice(k, 1); return idx;
+  });
+  renderTiles();
+};
+
+window.tryGuess = async function(){
+  const candidate = state.guess.map(i => state.bundle.anagram[i]).join('');
+  const v = $('verdict');
+  v.innerHTML = `<div class="stat">${EN() ? 'deriving PBKDF2 (200 000 iterations)…' : 'derivando PBKDF2 (200 000 iterações)…'}</div>`;
+  const t0 = performance.now();
+  const win = await verifyGuess(state.bundle, candidate);
+  const ms = (performance.now() - t0).toFixed(0);
+  if(win){
+    const key = await revealKey(state.bundle, candidate);
+    v.innerHTML =
+      `<div class="result-win">🏆 ${EN() ? 'WINNER — the MAC verifies. Prize swept:' : 'VENCEDOR — o MAC confere. Prêmio transferido:'} ${fmt(state.prize)} yTKN</div>` +
+      `<div class="out">${EN() ? 'decrypted prize key' : 'chave-prêmio decriptada'} ({e,1} × 64):\n${key}\n\nBlockz10 (${bzEncode(key).length} ${EN() ? 'symbols' : 'símbolos'}): ${bzEncode(key)}</div>` +
+      `<div class="stat">${EN() ? 'verification took' : 'verificação levou'} ${ms} ms</div>`;
+  } else {
+    v.innerHTML = `<div class="result-lose">✗ ${EN() ? 'wrong ordering — the MAC does not verify.' : 'ordem errada — o MAC não confere.'} <span class="stat">(${ms} ms)</span></div>`;
+  }
+};
+
+/* ---------- difficulty calculator ---------- */
+window.calcDif = function(){
+  const s = $('dif-in').value.trim();
+  if(!s){ $('dif-out').textContent = '—'; return; }
+  const hints = parseInt((EN() ? $('dif-hints-en') : $('dif-hints')).value) || 0;
+  const { orderings, bits } = difficulty(s, hints);
+  const str = orderings.toString();
+  const sci = str.length > 15
+    ? `${str[0]},${str.slice(1, 4)} × 10${superscript(str.length - 1)}`
+    : fmt(Number(orderings));
+  $('dif-out').textContent =
+    (EN()
+      ? `${s.length} characters · ${hints} hints\ndistinct orderings: ${sci}\nexact: ${str}\nsearch space: ${bits.toFixed(1)} bits`
+      : `${s.length} caracteres · ${hints} dicas\nordens distintas: ${sci}\nexato: ${str}\nespaço de busca: ${bits.toFixed(1)} bits`);
+};
+function superscript(n){
+  const map = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  return String(n).split('').map(d => map[d]).join('');
+}
+
+/* ---------- boot ---------- */
+await newLottery(6);
+calcDif();
+</script>
+</body>
+</html>
