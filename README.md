@@ -123,6 +123,20 @@ lottery-yourtoken/
 └── SPECIFICATION.md         # especificação formal bilíngue
 ```
 
+## Auditoria neural da chave / Neural key audit
+
+O site inclui um **detector de chaves fracas**: a rede neural de blocos do
+[Blockz10 Neural](https://github.com/elevbit-ai/blockz10-neural) (100% na
+tarefa de padrões) classifica a chave {e,1} como *aleatória*, *runs* ou
+*alternada* — estrutura demais torna o puzzle mais previsível do que a
+dificuldade nominal sugere. Roda no navegador, sem servidor. / The site
+ships a **weak-key detector**: the
+[Blockz10 Neural](https://github.com/elevbit-ai/blockz10-neural) block
+network (100% on the patterns task) classifies the {e,1} key as *random*,
+*runs* or *alternating* — too much structure makes the puzzle more
+predictable than its nominal difficulty suggests. Runs in the browser,
+serverless.
+
 ## Segurança / Security
 
 - Primitivos padrão apenas: PBKDF2-HMAC-SHA256, keystream SHA-256 em

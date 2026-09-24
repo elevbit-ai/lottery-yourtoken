@@ -112,6 +112,7 @@ html.en [data-en]{display:revert}
   <a class="item" href="#protocolo" data-pt>Protocolo</a><a class="item" href="#protocolo" data-en>Protocol</a>
   <a class="item" href="#demo">Demo</a>
   <a class="item" href="#dificuldade" data-pt>Dificuldade</a><a class="item" href="#dificuldade" data-en>Difficulty</a>
+  <a class="item" href="#qualidade" data-pt>Qualidade da chave</a><a class="item" href="#qualidade" data-en>Key quality</a>
   <a class="item" href="#video" data-pt>Vídeo</a><a class="item" href="#video" data-en>Video</a>
   <a class="item" href="#autor" data-pt>Autor</a><a class="item" href="#autor" data-en>Author</a>
   <span class="spacer"></span>
@@ -263,6 +264,26 @@ html.en [data-en]{display:revert}
   </div>
 </div></section>
 
+<section id="qualidade"><div class="wrap">
+  <h2 data-pt># Qualidade da chave — auditoria neural</h2><h2 data-en># Key quality — neural audit</h2>
+  <p class="lead" data-pt>Antes de criar uma loteria real, audite a chave-prêmio: uma chave {e,1} com estrutura demais (runs longos, alternância regular) é mais comprimível e estatisticamente mais previsível do que uma aleatória — o que altera a dificuldade real do puzzle. A análise usa a rede neural de blocos do <a href="https://github.com/elevbit-ai/blockz10-neural">Blockz10 Neural</a> (100% de acurácia na tarefa de padrões), rodando no seu navegador.</p>
+  <p class="lead" data-en>Before creating a live lottery, audit the prize key: an {e,1} key with too much structure (long runs, regular alternation) is more compressible and statistically more predictable than a random one — which changes the puzzle's real difficulty. The analysis uses the <a href="https://github.com/elevbit-ai/blockz10-neural">Blockz10 Neural</a> block network (100% accuracy on the patterns task), running in your browser.</p>
+  <div class="demo">
+    <label data-pt>CHAVE {e,1} — cole a sua ou gere uma</label>
+    <label data-en>{e,1} KEY — paste yours or generate one</label>
+    <input type="text" id="kq-in" maxlength="64" spellcheck="false" value="">
+    <div class="row">
+      <button class="act" onclick="kqAnalyze()" data-pt>🔎 Auditar chave</button>
+      <button class="act" onclick="kqAnalyze()" data-en>🔎 Audit key</button>
+      <button class="act sec" onclick="kqRandom()" data-pt>⚄ Gerar chave segura</button>
+      <button class="act sec" onclick="kqRandom()" data-en>⚄ Generate a safe key</button>
+    </div>
+    <div class="out" id="kq-out">—</div>
+    <div class="stat" data-pt>Classes: <b>aleatório</b> = pronta para a loteria · <b>blocos</b>/<b>alternado</b> = estrutura detectada, gere outra. A rede lê 6 features da codificação Blockz10 (densidade de runs, compressão eee11→311, taxa de troca…).</div>
+    <div class="stat" data-en>Classes: <b>random</b> = lottery-ready · <b>runs</b>/<b>alternating</b> = structure detected, generate another. The network reads 6 features from the Blockz10 encoding (run density, eee11→311 compression, switch rate…).</div>
+  </div>
+</div></section>
+
 <section id="video"><div class="wrap">
   <h2 data-pt># Vídeo explicativo</h2><h2 data-en># Explainer video</h2>
   <p class="lead" data-pt>O conceito completo em 100 segundos: a carteira, a senha, o embaralhamento, a criptografia, a matemática do espaço de busca e o momento da vitória.</p>
@@ -312,6 +333,7 @@ True
 <script type="module">
 import { createLottery, verifyGuess, revealKey, difficulty, bzEncode, generateEthPuzzleKey }
   from "./assets/lottery.js";
+import { BlockNet, encodeInput, patternFeatures } from "./assets/blocknet.js";
 
 /* ---------- language ---------- */
 window.setLang = function(l){
@@ -440,9 +462,58 @@ function superscript(n){
   return String(n).split('').map(d => map[d]).join('');
 }
 
+/* ---------- key quality audit (Blockz10 Neural) ---------- */
+let kqNet = null;
+const KQ_NAMES = [
+  ['blocos (runs longos)', 'runs (long blocks)'],
+  ['alternado (regular)', 'alternating (regular)'],
+  ['aleatório', 'random'],
+];
+
+async function kqModel(){
+  if(!kqNet){
+    const d = await (await fetch('assets/models/patterns.json')).json();
+    kqNet = BlockNet.fromDict(d);
+  }
+  return kqNet;
+}
+
+window.kqRandom = function(){
+  $('kq-in').value = generateEthPuzzleKey(64);
+  kqAnalyze();
+};
+
+window.kqAnalyze = async function(){
+  const en = EN();
+  const s = $('kq-in').value.trim();
+  if(!/^[e1]{16,64}$/.test(s)){
+    $('kq-out').textContent = en ? '⚠ {e,1} key, 16–64 characters' : '⚠ chave {e,1}, 16–64 caracteres';
+    return;
+  }
+  const net = await kqModel();
+  const { logits } = net.forward(encodeInput([patternFeatures(s)]));
+  const B = logits.map(r => r[0]);
+  let best = 0; for(let c = 1; c < 3; c++) if(B[c] > B[best]) best = c;
+  const z = B.map(v => Math.exp(v - Math.max(...B)));
+  const conf = (z[best] / z.reduce((a,b)=>a+b,0) * 100).toFixed(1);
+  const enc = bzEncode(s);
+  const good = best === 2;
+  const verdictPT = good
+    ? '✅ APROVADA — estatisticamente aleatória, pronta para a loteria'
+    : '⚠ REPROVADA — estrutura detectada: gere outra chave';
+  const verdictEN = good
+    ? '✅ APPROVED — statistically random, lottery-ready'
+    : '⚠ REJECTED — structure detected: generate another key';
+  $('kq-out').textContent =
+    `${en ? 'class' : 'classe'}: ${KQ_NAMES[best][en?1:0]}  (${en?'confidence':'confiança'} ${conf}%)\n` +
+    `${en ? 'Blockz10 compression' : 'compressão Blockz10'}: ${s.length} → ${enc.length} ${en?'symbols':'símbolos'}\n\n` +
+    (en ? verdictEN : verdictPT);
+};
+
 /* ---------- boot ---------- */
 await newLottery(6);
 calcDif();
+kqRandom();
 </script>
 </body>
 </html>
